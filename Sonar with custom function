@@ -1,0 +1,40 @@
+#include <NewPing.h>
+
+#define TRIG_PIN A1
+#define ECHO_PIN A0
+#define maxDistance 150
+
+void sonarPrint ();   // Function to outout sonar results
+
+unsigned int microSec;
+float CM_DISTANCE;
+float INCH_DISTANCE;
+
+NewPing SonarSensor (TRIG_PIN, ECHO_PIN, maxDistance);
+
+void setup() {
+  //use the serial monitor to view sensor output
+  Serial.begin(9600);
+}
+
+void loop () {
+  sonarPrint ();  //Calling custom sonarPrint function to output measure distances
+ }
+
+void sonarPrint (){
+    // starting delay for correct operation
+  delay(50);
+
+  // Assigning INCH_DISTANCE to the measured distance and printing the inches value 
+  INCH_DISTANCE = SonarSensor.ping_in();
+  Serial.print(INCH_DISTANCE);
+  Serial.println("in");
+
+  // Assigning CM_DISTANCE to the measured distance and printing the centimeter value 
+  CM_DISTANCE = SonarSensor.ping_in();
+  Serial.print(CM_DISTANCE);
+  Serial.println("cm");
+  
+}
+
+
