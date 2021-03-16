@@ -1,0 +1,49 @@
+#include <Servo.h> 
+
+Servo myservo;
+
+#define enA 6
+#define in3 7
+#define in4 8
+
+enum SERVOstates{
+  MID,
+  LEFT
+};
+
+enum SERVOstates LED = MID;
+unsigned long currentTime=0, previousTime=0;
+
+void setup() 
+{ 
+  Serial.begin(115200);
+  myservo.attach(11);
+  myservo.write(90);  // set servo to mid-point
+
+ pinMode(enA, OUTPUT);
+ pinMode(in3, OUTPUT);
+ pinMode(in4, OUTPUT);
+
+ analogWrite(enA,125);
+
+ digitalWrite(in3,LOW);
+ digitalWrite(in4,HIGH);
+  
+} 
+
+void loop() {
+
+ currentTime = millis();
+  if(currentTime - previousTime > 5000){
+    if(LED == MID){
+      myservo.write(45);
+      LED = LEFT;
+      previousTime = currentTime;
+    }      
+    else if(LED == LEFT){
+      myservo.write(100);
+      LED = MID;
+      previousTime = currentTime;
+    }      
+  }
+ } 
