@@ -1,14 +1,24 @@
+// Name: Dawson Merice
+// Course: EGR 185
+// Description: Robot drive and turn state machine 
+
 #include <Servo.h> 
 
 Servo myservo;
 
 #define enA 6
-#define in3 7
-#define in4 8
+#define in1 7
+#define in2 8
+
+#include <NewPing.h>
+#define TRIGGER_PIN  11  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     12  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
 enum SERVOstates{
-  MID,
-  LEFT
+  MID,            //default state, robot drives forward
+  LEFT            //turn state, robot drives left 25 degrees
 };
 
 enum SERVOstates LED = MID;
@@ -17,33 +27,45 @@ unsigned long currentTime=0, previousTime=0;
 void setup() 
 { 
   Serial.begin(115200);
-  myservo.attach(11);
-  myservo.write(90);  // set servo to mid-point
+  myservo.attach(9);  //attach servo to pin9
+  myservo.write(100);  // set servo to mid-point
 
- pinMode(enA, OUTPUT);
- pinMode(in3, OUTPUT);
- pinMode(in4, OUTPUT);
+ pinMode(enA, OUTPUT);      //assign pins as output
+ pinMode(in1, OUTPUT);
+ pinMode(in2, OUTPUT);
 
- analogWrite(enA,125);
+ analogWrite(enA,230);
 
- digitalWrite(in3,LOW);
- digitalWrite(in4,HIGH);
+ digitalWrite(in1,LOW);
+ digitalWrite(in2,HIGH);
   
 } 
 
 void loop() {
 
  currentTime = millis();
-  if(currentTime - previousTime > 5000){
+  if(sonar.ping_cm()>=12){
     if(LED == MID){
-      myservo.write(45);
+      myservo.write(145);          //servo in turn position 
       LED = LEFT;
-      previousTime = currentTime;
     }      
     else if(LED == LEFT){
-      myservo.write(100);
+      myservo.write(100);       //servo in straight position
       LED = MID;
-      previousTime = currentTime;
     }      
   }
- } 
+  else if(sonar.ping_cm()<=20){
+    myservo.write(100);
+    LED = MID;
+  }
+ }
+
+bool sonarPing(){
+  delay(50);                     // Wait 50ms between pings (about 20 pings/sec). 29ms should be the shortest delay between pings.
+  Serial.print("Ping: ");
+  Serial.print(sonar.ping_cm()); // Send ping, get distance in cm and print result (0 = outside set distance range)
+  Serial.println("cm");
+  Serial.print("Ping: ");
+  Serial.print(sonar.ping_in());
+  Serial.println("inches");
+}
