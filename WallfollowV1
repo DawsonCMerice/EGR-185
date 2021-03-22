@@ -1,0 +1,75 @@
+// Name: Dawson Merice
+// Course: EGR 185
+// Description: Robot drive and turn state machine 
+
+#include <Servo.h> 
+
+Servo myservo;
+
+#define enA 6
+#define in1 7
+#define in2 8
+
+#include <NewPing.h>
+#define TRIGGER_PIN  11  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     12  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+
+enum SERVOstates{
+  MID,            //default state, robot drives forward
+  LEFT,
+  RIGHT          
+};
+
+enum SERVOstates LED = MID;
+unsigned long currentTime=0, previousTime=0;
+
+void setup() 
+{ 
+  Serial.begin(115200);
+  myservo.attach(9);  //attach servo to pin9
+  myservo.write(110);  // set servo to mid-point
+
+ pinMode(enA, OUTPUT);      //assign pins as output
+ pinMode(in1, OUTPUT);
+ pinMode(in2, OUTPUT);
+
+ analogWrite(enA,190);
+
+ digitalWrite(in1,LOW);
+ digitalWrite(in2,HIGH);
+  
+} 
+
+void loop() {
+
+ currentTime = millis();
+  if(sonar.ping_cm()>8){
+    
+      myservo.write(105); //servo in turn position 
+      analogWrite(enA,120);
+      LED = LEFT;          
+    }      
+  else if(sonar.ping_cm() < 8 && sonar.ping_cm() > 4){
+    myservo.write(100);
+    analogWrite(enA,120);
+    LED = MID;
+  }
+  else if(sonar.ping_cm()<4){
+    myservo.write(95);
+    analogWrite(enA,120);
+    LED = RIGHT;
+  }
+  sonarPing();
+ }
+
+bool sonarPing(){
+  delay(50);                     // Wait 50ms between pings (about 20 pings/sec). 29ms should be the shortest delay between pings.
+  Serial.print("Ping: ");
+  Serial.print(sonar.ping_cm()); // Send ping, get distance in cm and print result (0 = outside set distance range)
+  Serial.println("cm");
+  Serial.print("Ping: ");
+  Serial.print(sonar.ping_in());
+  Serial.println("inches");
+}
