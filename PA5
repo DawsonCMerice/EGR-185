@@ -1,0 +1,100 @@
+/**************************************************************************
+ * Name:        William Mullins
+ * Course:      EGR 185 Section 701
+ * Professor:   Jin Xu
+ * Assignment:  LAB PA5
+ * Desciption:  This code uses the NewPing librart and Servo library to
+ *              make the robot turn based off of sensor inputs.
+ **************************************************************************/
+#include <Servo.h> 
+#include <NewPing.h>
+
+Servo myservo;
+
+// Macros for motor
+#define enA 6
+#define in1 7
+#define in2 8
+
+// Macros for URF Sensor
+#define TRIGGER_PIN  11  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     12  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+
+// Declaring states
+enum states{
+  FORWARD,            //default state, robot drives forward
+  RIGHT,          
+};
+
+enum states state = FORWARD;
+
+void setup() 
+{ 
+  Serial.begin(115200);
+  myservo.attach(9);  //attach servo to pin9
+  myservo.write(100);  // set servo to mid-point
+
+ pinMode(enA, OUTPUT);      //assign pins as output
+ pinMode(in1, OUTPUT);
+ pinMode(in2, OUTPUT);
+
+ analogWrite(enA,190);
+
+ digitalWrite(in1,HIGH);
+ digitalWrite(in2,LOW);
+
+} 
+
+void loop() {
+sonarPing();
+ switch(state){    //Starts a switch state, needed for the state machine to function properly 
+    case FORWARD:
+
+    MoveForward();
+    
+  if(sonar.ping_cm()>13){   // If the sonar reads greater than 13 centimeters
+      state = RIGHT;         // Switch to the RIGHT state to turn right
+    }
+    break;
+
+    case RIGHT:
+
+    MoveRight();
+
+    if(sonar.ping_cm()<13) {  //If the sonar reads less than 13 centimeters
+      state = FORWARD;        // Switch to the FORWARD state to drive straight
+    }
+    
+  break;
+  }
+}
+
+// Custom function for the sonar to ping and read a distance
+bool sonarPing(){
+  delay(50);                     // Wait 50ms between pings (about 20 pings/sec). 29ms should be the shortest delay between pings.
+  Serial.print("Ping: ");
+  Serial.print(sonar.ping_cm()); // Send ping, get distance in cm and print result (0 = outside set distance range)
+  Serial.println("cm");
+  Serial.print("Ping: ");
+  Serial.print(sonar.ping_in());
+  Serial.println("inches");
+}
+
+// Custom function to make the robot go straight
+void MoveForward(){    
+      myservo.write(100);
+      analogWrite(enA,180);
+      digitalWrite(in1,HIGH);
+      digitalWrite(in2,LOW);
+} 
+
+// Custom function to make the robot turn left
+void MoveRight(){     
+  myservo.write(145);
+  analogWrite(enA,235);
+  digitalWrite(in1,HIGH);
+  digitalWrite(in2,LOW);
+}
