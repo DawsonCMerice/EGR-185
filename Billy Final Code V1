@@ -1,0 +1,91 @@
+#include <Servo.h> 
+
+Servo myservo;
+
+#define enA 5
+#define in1 7
+#define in2 8
+
+#include <NewPing.h>
+#define TRIGGER_PIN  11  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     12  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+
+enum servoStates {
+  STRAIGHT,
+  LEFT
+};
+
+enum servoStates state = STRAIGHT;
+int distance;
+int desired_distance;
+int actual_distance;
+double error;
+double turn_signal;
+unsigned long currentTime=0, previousTime=0;
+int angleStr = 1500;
+int angleTurn;
+int strSpd = 210;
+int trnSpd = 235;
+int Kp = 50;
+int Kd = 1;
+int times;
+
+
+void setup() {
+
+  Serial.begin(115200);
+  myservo.attach(9);  //attach servo to pin9
+  myservo.write(90);  // set servo to mid-point
+
+ pinMode(enA, OUTPUT);      //assign pins as output
+ pinMode(in1, OUTPUT);
+ pinMode(in2, OUTPUT);
+
+ analogWrite(enA,strSpd);
+
+ digitalWrite(in1,LOW);
+ digitalWrite(in2, HIGH);
+
+}
+
+void loop() {
+ sonarEcho();
+ turningFix();
+Serial.println(myservo.read());
+ if(myservo.read() < 1250 || myservo.read() > 1750) {
+  analogWrite(enA,trnSpd);
+ }
+ 
+ else {
+  analogWrite(enA, strSpd);
+ }
+
+}
+
+void sonarEcho(){
+  delay(30); // Wait 30ms between pings (about 20 pings/sec)
+  distance = sonar.ping_median(3) / US_ROUNDTRIP_CM; // Send 3 pings and return the median ping converted to centimeters.
+}
+
+
+
+
+void turningFix(){
+  desired_distance = 9;
+  actual_distance = distance;
+  error = desired_distance - actual_distance;
+  turn_signal = error * Kp; //50
+  
+  angleTurn = angleStr + turn_signal;
+  if(angleTurn < 1000){
+    angleTurn = 1000;
+  }
+  if(angleTurn > 2200){
+    angleTurn = 2200;
+  }
+  
+  myservo.writeMicroseconds(angleTurn);
+  
+}
